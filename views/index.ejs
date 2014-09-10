@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %> Game</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.3.3/css/foundation.css">
+    <link rel="stylesheet" href="stylesheets/style.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.3.3/js/vendor/modernizr.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.3.3/js/foundation.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.3.3/js/vendor/fastclick.js"></script>
+  </head>
+  <body>
+  	<div id="welcome" class="row">
+  		<div class="small-12 columns text-center">
+  			<h1>Infestiation!</h1>
+  			<h3>Press the forward-slash, "/", key to begin!</h3>
+  		</div>
+  	</div>
+  	<a id="showControls" class="hide" href="#" data-reveal-id="controls_modal">Click Me For A Modal</a>
+	<div id="controls_modal" class="reveal-modal" data-reveal>
+	  <h2>Controls</h2>
+	  <p><img style="vertical-align:bottom;" src="images/arrow_keys.jpg" alt="Arrow Keys Image"> Use the arrow keys to move your fighter.</p>
+	  <p><img style="vertical-align:bottom; height:75px;" src="images/space_bar_key.png" alt="Arrow Keys Image"> Use the space bar to toggle fire.</p>
+	  <p><img style="vertical-align:bottom; height:50px;" src="images/forward_slash_key.png" alt="Arrow Keys Image"> Press the forward-slash key to view these controls again.</p>
+	  <button id="spawn_button" class="close-reveal-modal">Start!</button>
+	</div>
+	<div id="game_wrapper"></div>
+	<script src="javascripts/foundation.js"></script>
+  </body>
+</html>

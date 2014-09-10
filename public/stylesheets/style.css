@@ -1,0 +1,31 @@
+body {
+  padding: 0;
+  margin: 0;
+  font: 14px Arial, Helvetica, sans-serif;
+  max-height: 100%;
+}
+a {
+  color: #00B7FF;
+}
+.enemy {
+	background-color: green;
+	width:40px;
+	height:40px;
+	display:inline-block;
+	background-size: 100%;
+}
+#playerAnimation {
+	background-color: transparent;
+	width:32px;
+	height:61px;
+	position:absolute;
+}
+#spawn_button {
+	position: static !important;
+}
+#controls_modal #spawn_button {
+	float: right;
+}
+#game_wrapper {
+	min-height: 100%;
+}
