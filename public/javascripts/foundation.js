@@ -1,29 +1,48 @@
+var game;
+var gameLoopIntervalID;
+var enemySpawnIntervalID;
 $(document).foundation();
 
 $(document).ready(function(){
 	document.onkeydown = function(e) {
 		if(e.which == 191) {
-			$('#welcome').remove();
 			$('#showControls').trigger('click');
 		}
 	}
-	$('#spawn_button').click(function(){
+	$(document).on('click', '#spawn_button', function(){
+		$('#welcome').remove();
 		$('#game_wrapper').css('background-image', "url('images/tiles.png')");
-		$('#game_wrapper').append("<canvas id='playerAnimation'></canvas>");
-		game = new Game();
 		$('#spawn_button').remove();
-		setInterval(function(){GameLoop()}, 60);
+
+		game = new Game();
+		$('#game_wrapper').append("<canvas class='players' id='player"+game.playerHTML+"'></canvas>");
+		game.initializeGame();
+
+		gameLoopIntervalID = setInterval(function(){GameLoop()}, 60);
 		for(var i=0; i<3;i++) {
 			game.spawnEnemy();
 		}
-		setInterval(function(){game.spawnEnemy()}, game.spawnrateTimer);
+		enemySpawnIntervalID = setInterval(function(){game.spawnEnemy()}, game.spawnrateTimer);
+	})
+	$('#game_over_modal').on('closed', function() {
+		$('#controls_modal').append("<button id='spawn_button' class='close-reveal-modal'>Click to Start!</button>");
+		$('#game_wrapper').css('background-image', "none");
+		html = "<div id='welcome' class='row'>"+
+			  		"<div class='small-12 columns text-center'>"+
+			  			"<h1>Infestiation!</h1>"+
+			  			"<h3>Press the forward-slash, '/', key to begin!</h3>"+
+			  		"</div>"+
+			  	"</div>";
+		$('body').prepend(html);
 	})
 })
 
 function GameLoop()
 {
-	if (player.keyMap[32]) {
-		game.fireBullet();
+	for (player in game.players) {
+		if (game.players[player].keyMap[32]) {
+			game.fireBullet();
+		}
 	}
 	game.refreshEnemies();
 	game.refreshBullets();
@@ -35,6 +54,10 @@ function Player(id) {
 	this.y = (window.innerHeight/2)-20,
 	this.html = id,
 	this.start = 0;
+	var playerSprite;
+	var playerImage;
+	var self = this;
+
 	this.keyMap = {
 		37: false, // left key
 		38: false, // up key
@@ -45,17 +68,17 @@ function Player(id) {
 	}
 
 	this.spriteLoop = function(timestamp) {
-		if (player.start < 6) {
+		if (self.start < 6) {
 			setTimeout(function() {
-				requestAnimationFrame(player.spriteLoop);
+				requestAnimationFrame(self.spriteLoop);
 			}, 50)
-			playerSprite.update();
-			playerSprite.render();
-			player.start += 1;
+			self.playerSprite.update();
+			self.playerSprite.render();
+			self.start += 1;
 		}
 		else
 		{
-			player.start = 0;
+			self.start = 0;
 		}
 	}
 	this.sprite = function (options) {
@@ -112,7 +135,6 @@ function Enemy() {
 	this.target = player;
 	function randBorder() {
 		border = Math.floor(Math.rand*4);
-		console.log(border)
 	}
 }
 
@@ -124,30 +146,32 @@ function Game() {
 	this.enemies = [];
 	this.enemyHTML = 0;
 	this.spawnrateTimer = 3000;
+	var isGameOver;
 	var self = this;
 
-	function initializeGame() {
-		player = new Player(self.playerHTML);
+	this.initializeGame = function() {
+		var player = new Player(self.playerHTML);
+		var temp = 'playerSprite'+self.playerHTML;
 
 		self.players.push(player);
 		// Get canvas
-		canvas = document.getElementById("playerAnimation");
+		canvas = document.getElementById("player"+player.html);
 		canvas.width = 32;
 		canvas.height = 64;
 		// Create sprite sheet
-		playerImage = new Image();
+		player.playerImage = new Image();
 		// Create sprite
-		playerSprite = player.sprite({
+		player.playerSprite = player.sprite({
 			context: canvas.getContext("2d"),
 			width: 192,
 			height: 256,
-			image: playerImage,
+			image: player.playerImage,
 			numberOfFrames: 6,
 			ticksPerFrame: 1,
 			direction: 0
 		});		
 		// Load sprite sheet
-		playerImage.src = "images/sprites/sprite_sheet.png";
+		player.playerImage.src = "images/sprites/sprite_sheet.png";
 		self.refreshPlayer();
 		player.spriteLoop();
 
@@ -155,59 +179,68 @@ function Game() {
 	}
 	
 	document.onkeydown = function(e){
-		if (e.which in player.keyMap && e.which != 32) {
-			player.keyMap[e.which] = true;
-			if (player.keyMap[37]) {
-				playerSprite.direction = 128;
-				if(player.x > 0) {
-					player.x -= 10;
-				} else {
-					player.x = 0;
+		if(game != undefined) {
+			for (player in game.players) {
+				if (e.which in game.players[player].keyMap && e.which != 32) {
+					game.players[player].keyMap[e.which] = true;
+					if (game.players[player].keyMap[37]) {
+						game.players[player].playerSprite.direction = 128;
+						if(game.players[player].x > 0) {
+							game.players[player].x -= 10;
+						} else {
+							game.players[player].x = 0;
+						}
+						requestAnimationFrame(game.players[player].spriteLoop);
+					}
+					if (game.players[player].keyMap[38]) {
+						game.players[player].playerSprite.direction = 64;
+						if(game.players[player].y > 0) {
+							game.players[player].y -= 10;
+						} else {
+							game.players[player].y = 0;
+						}
+						requestAnimationFrame(game.players[player].spriteLoop);
+					}
+					if (game.players[player].keyMap[39]) {
+						game.players[player].playerSprite.direction = 192;
+						if(game.players[player].x+32 < window.innerWidth) {
+							game.players[player].x += 10;
+						} else {
+							game.players[player].x = window.innerWidth-32;
+						}
+						requestAnimationFrame(game.players[player].spriteLoop);
+					}
+					if (game.players[player].keyMap[40]) {
+						game.players[player].playerSprite.direction = 0;
+						if(game.players[player].y+62 < window.innerHeight) {
+							game.players[player].y += 10;
+						} else {
+							game.players[player].y = window.innerHeight-62;
+						}
+						requestAnimationFrame(game.players[player].spriteLoop);
+					}
+				} else if (e.which in game.players[player].keyMap && e.which == 32) {
+					if (game.players[player].keyMap[32] == true) {
+						game.players[player].keyMap[32] = false;
+					} else {
+						game.players[player].keyMap[32] = true;
+					}
 				}
-				requestAnimationFrame(player.spriteLoop);
 			}
-			if (player.keyMap[38]) {
-				playerSprite.direction = 64;
-				if(player.y > 0) {
-					player.y -= 10;
-				} else {
-					player.y = 0;
-				}
-				requestAnimationFrame(player.spriteLoop);
-			}
-			if (player.keyMap[39]) {
-				playerSprite.direction = 192;
-				if(player.x+32 < window.innerWidth) {
-					player.x += 10;
-				} else {
-					player.x = window.innerWidth-32;
-				}
-				requestAnimationFrame(player.spriteLoop);
-			}
-			if (player.keyMap[40]) {
-				playerSprite.direction = 0;
-				if(player.y+62 < window.innerHeight) {
-					player.y += 10;
-				} else {
-					player.y = window.innerHeight-62;
-				}
-				requestAnimationFrame(player.spriteLoop);
-			}
-			if (player.keyMap[191]) {
+			game.refreshPlayer();
+		} else {
+			if(e.which == 191) {
 				$('#showControls').trigger('click');
 			}
-		} else if (e.which in player.keyMap && e.which == 32) {
-			if (player.keyMap[32] == true) {
-				player.keyMap[32] = false;
-			} else {
-				player.keyMap[32] = true;
-			}
 		}
-		game.refreshPlayer();
 	}
 	document.onkeyup = function(e) {
-		if(e.which in player.keyMap && e.which != 32) {
-			player.keyMap[e.which] = false;
+		if(game != undefined) {
+			for (player in game.players) {
+				if(e.which in game.players[player].keyMap && e.which != 32) {
+					game.players[player].keyMap[e.which] = false;
+				}
+			}
 		}
 	}
 
@@ -244,44 +277,53 @@ function Game() {
 			x: x,
 			y: y,
 			html: this.enemyHTML,
-			target: player
+			target: this.players[0]
 		})
 		$('#game_wrapper').append("<span class='enemies' id='enemy"+this.enemyHTML+"' style='top:"+y+"px; left:"+x+"px;'></span>");
 		this.enemyHTML++;
 	}
 
 	this.fireBullet = function() {
-		var x = player.x+16,
-			y = player.y+31,
-			dir = playerSprite.direction;
-		
-		this.bullets.push({
-			x: x,
-			y: y,
-			html: this.bulletHTML,
-			direction: dir
-		})
+		for(player in this.players) {
+			if (this.players[player].keyMap[32]) {
+				var x = this.players[player].x+16,
+					y = this.players[player].y+31,
+					dir = this.players[player].playerSprite.direction;
+				
+				this.bullets.push({
+					x: x,
+					y: y,
+					html: this.bulletHTML,
+					direction: dir
+				})
 
-		$('#game_wrapper').append("<span class='bullets' id='bullet"+this.bulletHTML+"' style='top:"+x+"px; left:"+y+"px; '></span>");
-		if (dir == 128 || dir == 192) {
-			$('#bullet'+this.bulletHTML).css('width', '6px').css('height', '2px')
-		} else {
-			$('#bullet'+this.bulletHTML).css('width', '2px').css('height', '6px')
+				$('#game_wrapper').append("<span class='bullets' id='bullet"+this.bulletHTML+"' style='top:"+x+"px; left:"+y+"px; '></span>");
+				if (dir == 128 || dir == 192) {
+					$('#bullet'+this.bulletHTML).css('width', '6px').css('height', '2px')
+				} else {
+					$('#bullet'+this.bulletHTML).css('width', '2px').css('height', '6px')
+				}
+				this.bulletHTML++;
+			}
 		}
-		this.bulletHTML++;
 	}
 
 	this.detectCollision = function() {
-
 		for (enemy in this.enemies) {
-			var minPlayerDistance = 16+7;
-			var actualPlayerDistance = Math.sqrt(Math.pow(((this.enemies[enemy].x-14+7)-(player.x)), 2) + Math.pow(((this.enemies[enemy].y-24+7)-(player.y)), 2))
-			if (actualPlayerDistance <= minPlayerDistance) {
-
-				$('#enemy'+this.enemies[enemy].html).remove();
-				this.enemies[enemy] = this.enemies[this.enemies.length-1];
-				this.enemies.pop();
-				return;
+			for (player in this.players) {
+				var minPlayerDistance = 16+7;
+				var actualPlayerDistance = Math.sqrt(Math.pow(((this.enemies[enemy].x-14+7)-(this.players[player].x)), 2) + Math.pow(((this.enemies[enemy].y-24+7)-(this.players[player].y)), 2))
+				if (actualPlayerDistance <= minPlayerDistance) {
+					$('#player'+this.players[player].html).remove();
+					this.players[player] = this.players[this.players.length-1];
+					this.players.pop();
+					if (this.players.length == 0) {
+						GameOver();
+					}
+					$('#enemy'+this.enemies[enemy].html).remove();
+					this.enemies[enemy] = this.enemies[this.enemies.length-1];
+					this.enemies.pop();
+				}
 			}
 
 			for(bullet in this.bullets) {
@@ -313,10 +355,13 @@ function Game() {
 				return;
 			}
 		}
+
 	}
 
 	this.refreshPlayer = function() {
-		$('#playerAnimation').css('left', player.x).css('top', player.y);
+		for (player in this.players) {
+			$('#player'+this.players[player].html).css('left', this.players[player].x).css('top', this.players[player].y);
+		}
 	}
 
 	this.refreshEnemies = function() {
@@ -354,6 +399,15 @@ function Game() {
 			$("#bullet"+this.bullets[bullet].html).css('left', this.bullets[bullet].x).css('top', this.bullets[bullet].y);
 		}
 	}
+}
 
-	initializeGame();
+function GameOver() {
+	$('.enemies').remove();
+	$('.bullets').remove();
+
+	game = undefined;
+	clearInterval(gameLoopIntervalID);
+	clearInterval(enemySpawnIntervalID);
+
+	$('#gameOver').trigger('click');
 }

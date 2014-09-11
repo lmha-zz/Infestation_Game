@@ -13,17 +13,22 @@
   	<div id="welcome" class="row">
   		<div class="small-12 columns text-center">
   			<h1>Infestiation!</h1>
-  			<h3>Press the forward-slash, "/", key to begin!</h3>
+  			<h3>Press the forward-slash, "/", key to read instructions!</h3>
   		</div>
   	</div>
-  	<a id="showControls" class="hide" href="#" data-reveal-id="controls_modal">Click Me For A Modal</a>
+    <a id="showControls" class="hide" href="#" data-reveal-id="controls_modal"></a>
+  	<a id="gameOver" class="hide" href="#" data-reveal-id="game_over_modal"></a>
 	<div id="controls_modal" class="reveal-modal" data-reveal>
 	  <h2>Controls</h2>
 	  <p><img style="vertical-align:bottom;" src="images/arrow_keys.jpg" alt="Arrow Keys Image"> Use the arrow keys to move your fighter.</p>
 	  <p><img style="vertical-align:bottom; height:75px;" src="images/space_bar_key.png" alt="Arrow Keys Image"> Use the space bar to toggle fire.</p>
 	  <p><img style="vertical-align:bottom; height:50px;" src="images/forward_slash_key.png" alt="Arrow Keys Image"> Press the forward-slash key to view these controls again.</p>
-	  <p>(Click start to begin!)</p><button id="spawn_button" class="close-reveal-modal">Start!</button>
+	  <button id="spawn_button" class="close-reveal-modal">Click to Start!</button>
 	</div>
+  <div id="game_over_modal" class="reveal-modal" data-reveal>
+    <h1>GAME OVER!</h1>
+    <h2>All players have fallen!</h2>
+  </div>
 	<div id="game_wrapper"></div>
 	<script src="javascripts/foundation.js"></script>
   </body>
