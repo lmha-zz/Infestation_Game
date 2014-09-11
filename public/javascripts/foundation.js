@@ -21,7 +21,11 @@ $(document).ready(function(){
 
 function GameLoop()
 {
+	if (player.keyMap[32]) {
+		game.fireBullet();
+	}
 	game.refreshEnemies();
+	game.refreshBullets();
 	game.detectCollision();
 }
 
@@ -113,7 +117,8 @@ function Enemy() {
 function Game() {
 	this.players = [];
 	this.bullets = [];
-	this.enemies = {};
+	this.bulletHTML = 0;
+	this.enemies = [];
 	this.enemyHTML = 0;
 	var self = this;
 
@@ -227,24 +232,74 @@ function Game() {
 				x = Math.floor(Math.random()*(window.innerWidth-7))
 				break;
 		}
-		this.enemies[this.enemyHTML] = {
+		this.enemies.push({
 			x: x,
 			y: y,
 			html: this.enemyHTML,
 			target: player
-		}
+		})
 		$('#game_wrapper').append("<span class='enemies' id='enemy"+this.enemyHTML+"' style='top:"+y+"px; left:"+x+"px;'></span>");
 		this.enemyHTML++;
 	}
 
-	this.detectCollision = function() {
-		for (enemy in this.enemies) {
-			var minDistance = (16) + (7);
-			var actualDistance = Math.sqrt(Math.pow((this.enemies[enemy].x-(player.x+16)), 2) + Math.pow((this.enemies[enemy].y-(player.y+31)), 2));
+	this.fireBullet = function() {
+		var x = player.x+16,
+			y = player.y+31,
+			dir = playerSprite.direction;
+		
+		this.bullets.push({
+			x: x,
+			y: y,
+			html: this.bulletHTML,
+			direction: dir
+		})
 
-			if(actualDistance <= minDistance) {
+		$('#game_wrapper').append("<span class='bullets' id='bullet"+this.bulletHTML+"' style='top:"+x+"px; left:"+y+"px; '></span>");
+		if (dir == 128 || dir == 192) {
+			$('#bullet'+this.bulletHTML).css('width', '6px').css('height', '2px')
+		} else {
+			$('#bullet'+this.bulletHTML).css('width', '2px').css('height', '6px')
+		}
+		this.bulletHTML++;
+	}
+
+	this.detectCollision = function() {
+
+		for (enemy in this.enemies) {
+			if(this.enemies[enemy].x > player.x+16 && this.enemies[enemy].x < player.x && this.enemies[enemy].y > player.y+32 && this.enemies[enemy].y < player.y) {
+				//player is dying!
+				console.log('hi!')
 				$('#enemy'+this.enemies[enemy].html).remove();
-				delete this.enemies[this.enemies[enemy].html];
+				this.enemies[enemy] = this.enemies[this.enemies.length-1];
+				this.enemies.pop();
+				return;
+			}
+
+			for(bullet in this.bullets) {
+				if(this.enemies[enemy].x > this.bullets[bullet].x-7 && this.enemies[enemy].x < this.bullets[bullet].x+7 && this.enemies[enemy].y > this.bullets[bullet].y-7 && this.enemies[enemy].y < this.bullets[bullet].y+7) {
+					$('#enemy'+this.enemies[enemy].html).remove();
+					this.enemies[enemy] = this.enemies[this.enemies.length-1];
+					this.enemies.pop();
+					$('#bullet'+this.bullets[bullet].html).remove();
+					this.bullets[bullet] = this.bullets[this.bullets.length-1];
+					this.bullets.pop();
+					return;
+				}
+			}
+		}
+
+		for (bullet in this.bullets) {
+			if(this.bullets[bullet].x < 0 || this.bullets[bullet].x > window.innerWidth ) {
+				$('#bullet'+this.bullets[bullet].html).remove();
+				this.bullets[bullet] = this.bullets[this.bullets.length-1];
+				this.bullets.pop();
+				return;
+			}
+			if(this.bullets[bullet].y < 0 || this.bullets[bullet].y > window.innerHeight ) {
+				$('#bullet'+this.bullets[bullet].html).remove();
+				this.bullets[bullet] = this.bullets[this.bullets.length-1];
+				this.bullets.pop();
+				return;
 			}
 		}
 	}
@@ -266,6 +321,26 @@ function Game() {
 				this.enemies[enemy].y-=5;
 			}
 			$("#enemy"+this.enemies[enemy].html).css('left', this.enemies[enemy].x).css('top', this.enemies[enemy].y);
+		}
+	}
+
+	this.refreshBullets = function() {
+		for (bullet in this.bullets) {
+			switch(this.bullets[bullet].direction) {
+				case 128:
+					this.bullets[bullet].x -= 20
+					break;
+				case 64:
+					this.bullets[bullet].y -= 20
+					break;
+				case 192:
+					this.bullets[bullet].x += 20
+					break;
+				case 0:
+					this.bullets[bullet].y += 20
+					break;
+			}
+			$("#bullet"+this.bullets[bullet].html).css('left', this.bullets[bullet].x).css('top', this.bullets[bullet].y);
 		}
 	}
 
