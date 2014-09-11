@@ -1,4 +1,5 @@
 $(document).foundation();
+
 $(document).ready(function(){
 	document.onkeydown = function(e) {
 		if(e.which == 191) {
@@ -8,14 +9,14 @@ $(document).ready(function(){
 	}
 	$('#spawn_button').click(function(){
 		$('#game_wrapper').css('background-image', "url('images/tiles.png')");
-		$('#game_wrapper').html("<canvas id='playerAnimation'></canvas>");
+		$('#game_wrapper').append("<canvas id='playerAnimation'></canvas>");
 		game = new Game();
 		$('#spawn_button').remove();
-		setInterval(function(){GameLoop()}, 100);
+		setInterval(function(){GameLoop()}, 60);
 		for(var i=0; i<3;i++) {
 			game.spawnEnemy();
 		}
-		setInterval(function(){game.spawnEnemy()}, 3000);
+		setInterval(function(){game.spawnEnemy()}, game.spawnrateTimer);
 	})
 })
 
@@ -29,9 +30,10 @@ function GameLoop()
 	game.detectCollision();
 }
 
-function Player() {
+function Player(id) {
 	this.x = (window.innerWidth/2)-20,
 	this.y = (window.innerHeight/2)-20,
+	this.html = id,
 	this.start = 0;
 	this.keyMap = {
 		37: false, // left key
@@ -116,14 +118,18 @@ function Enemy() {
 
 function Game() {
 	this.players = [];
+	this.playerHTML = 0;
 	this.bullets = [];
 	this.bulletHTML = 0;
 	this.enemies = [];
 	this.enemyHTML = 0;
+	this.spawnrateTimer = 3000;
 	var self = this;
 
 	function initializeGame() {
-		window.player = new Player();
+		player = new Player(self.playerHTML);
+
+		self.players.push(player);
 		// Get canvas
 		canvas = document.getElementById("playerAnimation");
 		canvas.width = 32;
@@ -144,6 +150,8 @@ function Game() {
 		playerImage.src = "images/sprites/sprite_sheet.png";
 		self.refreshPlayer();
 		player.spriteLoop();
+
+		self.playerHTML++;
 	}
 	
 	document.onkeydown = function(e){
@@ -266,9 +274,10 @@ function Game() {
 	this.detectCollision = function() {
 
 		for (enemy in this.enemies) {
-			if(this.enemies[enemy].x > player.x+16 && this.enemies[enemy].x < player.x && this.enemies[enemy].y > player.y+32 && this.enemies[enemy].y < player.y) {
-				//player is dying!
-				console.log('hi!')
+			var minPlayerDistance = 16+7;
+			var actualPlayerDistance = Math.sqrt(Math.pow(((this.enemies[enemy].x-14+7)-(player.x)), 2) + Math.pow(((this.enemies[enemy].y-24+7)-(player.y)), 2))
+			if (actualPlayerDistance <= minPlayerDistance) {
+
 				$('#enemy'+this.enemies[enemy].html).remove();
 				this.enemies[enemy] = this.enemies[this.enemies.length-1];
 				this.enemies.pop();
@@ -276,7 +285,9 @@ function Game() {
 			}
 
 			for(bullet in this.bullets) {
-				if(this.enemies[enemy].x > this.bullets[bullet].x-7 && this.enemies[enemy].x < this.bullets[bullet].x+7 && this.enemies[enemy].y > this.bullets[bullet].y-7 && this.enemies[enemy].y < this.bullets[bullet].y+7) {
+				var minBulletDistance = 2+7;
+				var actualBulletDistance = Math.sqrt(Math.pow(((this.enemies[enemy].x+7)-(this.bullets[bullet].x)), 2) + Math.pow(((this.enemies[enemy].y+7)-(this.bullets[bullet].y)), 2))
+				if(actualBulletDistance <= minBulletDistance) {
 					$('#enemy'+this.enemies[enemy].html).remove();
 					this.enemies[enemy] = this.enemies[this.enemies.length-1];
 					this.enemies.pop();
@@ -315,7 +326,7 @@ function Game() {
 			} else {
 				this.enemies[enemy].x-=5;
 			}
-			if(this.enemies[enemy].target.y+26 > this.enemies[enemy].y) {
+			if(this.enemies[enemy].target.y+20 > this.enemies[enemy].y) {
 				this.enemies[enemy].y+=5;
 			} else {
 				this.enemies[enemy].y-=5;
