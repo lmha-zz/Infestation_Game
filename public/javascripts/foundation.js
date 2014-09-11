@@ -12,12 +12,17 @@ $(document).ready(function(){
 		game = new Game();
 		$('#spawn_button').remove();
 		setInterval(function(){GameLoop()}, 100);
+		for(var i=0; i<3;i++) {
+			game.spawnEnemy();
+		}
+		// setTimeout(function() {game.spawnEnemy()}, 1000)
+		setInterval(function(){game.spawnEnemy()}, 3000);
 	})
 })
 
 function GameLoop()
 {
-	game.refreshPlayer();
+	game.refreshEnemies();
 }
 
 function Player() {
@@ -98,11 +103,18 @@ function Player() {
 function Enemy() {
 	this.x = Math.random()*window.innerWidth;
 	this.y = Math.random()*window.innerHeight;
+	this.target = player;
+	function randBorder() {
+		border = Math.floor(Math.rand*4);
+		console.log(border)
+	}
 }
 
 function Game() {
-	var bullets = [];
-	var enemies = [];
+	this.players = [];
+	this.bullets = [];
+	this.enemies = {};
+	this.enemyHTML = 0;
 	var self = this;
 
 	function initializeGame() {
@@ -125,6 +137,7 @@ function Game() {
 		});		
 		// Load sprite sheet
 		playerImage.src = "images/sprites/sprite_sheet.png";
+		self.refreshPlayer();
 		player.spriteLoop();
 	}
 	
@@ -177,7 +190,7 @@ function Game() {
 				player.keyMap[32] = true;
 			}
 		}
-		self.refreshGame
+		game.refreshPlayer();
 	}
 	document.onkeyup = function(e) {
 		if(e.which in player.keyMap && e.which != 32) {
@@ -185,9 +198,72 @@ function Game() {
 		}
 	}
 
-	this.refreshPlayer = function() {
-		$('#playerAnimation').css('left', player.x)
-		$('#playerAnimation').css('top', player.y)
+	this.spawnEnemy = function() {
+		var x,
+			y,
+			target;
+		var border = {
+			0: "left",
+			1: "top",
+			2: "right",
+			3: "bottom"
+		}
+		randNum = Math.floor(Math.random()*4);
+		switch(border[randNum]) {
+			case "left":
+				x = 0;
+				y = Math.floor(Math.random()*(window.innerHeight-10))
+				break;
+			case "top":
+				y = 0;
+				x = Math.floor(Math.random()*(window.innerWidth-10))
+				break;
+			case "right":
+				x = (window.innerWidth-10);
+				y = Math.floor(Math.random()*(window.innerHeight-10))
+				break;
+			case "bottom":
+				y = (window.innerHeight-10);
+				x = Math.floor(Math.random()*(window.innerWidth-10))
+				break;
+		}
+		this.enemies[this.enemyHTML] = {
+			x: x,
+			y: y,
+			html: this.enemyHTML,
+			target: player
+		}
+		$('#game_wrapper').append("<span class='enemies' id='enemy"+this.enemyHTML+"' style='top:"+y+"px; left:"+x+"px;'></span>");
+		this.enemyHTML++;
 	}
+
+	this.refreshPlayer = function() {
+		$('#playerAnimation').css('left', player.x).css('top', player.y);
+	}
+
+	this.refreshEnemies = function() {
+		for (enemy in this.enemies) {
+			var minDistance = (16) + (5);
+			var actualDistance = Math.sqrt(Math.pow((this.enemies[enemy].x-(player.x+16)), 2) + Math.pow((this.enemies[enemy].y-(player.y+26)), 2));
+
+			if(actualDistance <= minDistance) {
+				$('#enemy'+this.enemies[enemy].html).remove();
+				delete this.enemies[this.enemies[enemy].html];
+			} else {
+				if(this.enemies[enemy].target.x+16 > this.enemies[enemy].x) {
+					this.enemies[enemy].x+=5;
+				} else {
+					this.enemies[enemy].x-=5;
+				}
+				if(this.enemies[enemy].target.y+26 > this.enemies[enemy].y) {
+					this.enemies[enemy].y+=5;
+				} else {
+					this.enemies[enemy].y-=5;
+				}
+				$("#enemy"+this.enemies[enemy].html).css('left', this.enemies[enemy].x).css('top', this.enemies[enemy].y);
+			}
+		}
+	}
+
 	initializeGame();
 }
