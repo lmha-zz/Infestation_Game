@@ -15,7 +15,6 @@ $(document).ready(function(){
 		for(var i=0; i<3;i++) {
 			game.spawnEnemy();
 		}
-		// setTimeout(function() {game.spawnEnemy()}, 1000)
 		setInterval(function(){game.spawnEnemy()}, 3000);
 	})
 })
@@ -23,6 +22,7 @@ $(document).ready(function(){
 function GameLoop()
 {
 	game.refreshEnemies();
+	game.detectCollision();
 }
 
 function Player() {
@@ -146,7 +146,7 @@ function Game() {
 			player.keyMap[e.which] = true;
 			if (player.keyMap[37]) {
 				playerSprite.direction = 128;
-				if(player.x-20 > 0) {
+				if(player.x > 0) {
 					player.x -= 10;
 				} else {
 					player.x = 0;
@@ -155,7 +155,7 @@ function Game() {
 			}
 			if (player.keyMap[38]) {
 				playerSprite.direction = 64;
-				if(player.y-20 > 0) {
+				if(player.y > 0) {
 					player.y -= 10;
 				} else {
 					player.y = 0;
@@ -164,19 +164,19 @@ function Game() {
 			}
 			if (player.keyMap[39]) {
 				playerSprite.direction = 192;
-				if(player.x+20 < window.innerWidth-40) {
+				if(player.x+32 < window.innerWidth) {
 					player.x += 10;
 				} else {
-					player.x = window.innerWidth-40;
+					player.x = window.innerWidth-32;
 				}
 				requestAnimationFrame(player.spriteLoop);
 			}
 			if (player.keyMap[40]) {
 				playerSprite.direction = 0;
-				if(player.y+20 < window.innerHeight-40) {
+				if(player.y+62 < window.innerHeight) {
 					player.y += 10;
 				} else {
-					player.y = window.innerHeight-40;
+					player.y = window.innerHeight-62;
 				}
 				requestAnimationFrame(player.spriteLoop);
 			}
@@ -212,19 +212,19 @@ function Game() {
 		switch(border[randNum]) {
 			case "left":
 				x = 0;
-				y = Math.floor(Math.random()*(window.innerHeight-10))
+				y = Math.floor(Math.random()*(window.innerHeight-7))
 				break;
 			case "top":
 				y = 0;
-				x = Math.floor(Math.random()*(window.innerWidth-10))
+				x = Math.floor(Math.random()*(window.innerWidth-7))
 				break;
 			case "right":
-				x = (window.innerWidth-10);
-				y = Math.floor(Math.random()*(window.innerHeight-10))
+				x = (window.innerWidth-7);
+				y = Math.floor(Math.random()*(window.innerHeight-7))
 				break;
 			case "bottom":
-				y = (window.innerHeight-10);
-				x = Math.floor(Math.random()*(window.innerWidth-10))
+				y = (window.innerHeight-7);
+				x = Math.floor(Math.random()*(window.innerWidth-7))
 				break;
 		}
 		this.enemies[this.enemyHTML] = {
@@ -237,31 +237,35 @@ function Game() {
 		this.enemyHTML++;
 	}
 
+	this.detectCollision = function() {
+		for (enemy in this.enemies) {
+			var minDistance = (16) + (7);
+			var actualDistance = Math.sqrt(Math.pow((this.enemies[enemy].x-(player.x+16)), 2) + Math.pow((this.enemies[enemy].y-(player.y+31)), 2));
+
+			if(actualDistance <= minDistance) {
+				$('#enemy'+this.enemies[enemy].html).remove();
+				delete this.enemies[this.enemies[enemy].html];
+			}
+		}
+	}
+
 	this.refreshPlayer = function() {
 		$('#playerAnimation').css('left', player.x).css('top', player.y);
 	}
 
 	this.refreshEnemies = function() {
 		for (enemy in this.enemies) {
-			var minDistance = (16) + (5);
-			var actualDistance = Math.sqrt(Math.pow((this.enemies[enemy].x-(player.x+16)), 2) + Math.pow((this.enemies[enemy].y-(player.y+26)), 2));
-
-			if(actualDistance <= minDistance) {
-				$('#enemy'+this.enemies[enemy].html).remove();
-				delete this.enemies[this.enemies[enemy].html];
+			if(this.enemies[enemy].target.x+16 > this.enemies[enemy].x) {
+				this.enemies[enemy].x+=5;
 			} else {
-				if(this.enemies[enemy].target.x+16 > this.enemies[enemy].x) {
-					this.enemies[enemy].x+=5;
-				} else {
-					this.enemies[enemy].x-=5;
-				}
-				if(this.enemies[enemy].target.y+26 > this.enemies[enemy].y) {
-					this.enemies[enemy].y+=5;
-				} else {
-					this.enemies[enemy].y-=5;
-				}
-				$("#enemy"+this.enemies[enemy].html).css('left', this.enemies[enemy].x).css('top', this.enemies[enemy].y);
+				this.enemies[enemy].x-=5;
 			}
+			if(this.enemies[enemy].target.y+26 > this.enemies[enemy].y) {
+				this.enemies[enemy].y+=5;
+			} else {
+				this.enemies[enemy].y-=5;
+			}
+			$("#enemy"+this.enemies[enemy].html).css('left', this.enemies[enemy].x).css('top', this.enemies[enemy].y);
 		}
 	}
 
