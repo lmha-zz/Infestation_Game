@@ -5,7 +5,7 @@ body {
   padding: 0;
   margin: 0;
   font: 14px Arial, Helvetica, sans-serif;
-  max-height: 100%;
+  min-height: 100%;
 }
 a {
   color: #00B7FF;
@@ -18,7 +18,7 @@ a {
 	position:absolute;
 }
 .bullets {
-	background-color: yellow;
+	background-color: #00FFFF;
 	position:absolute;
 }
 .players {
